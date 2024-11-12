@@ -23,25 +23,47 @@ export default function SignIn() {
   })
 
   async function onSubmit(values: z.infer<typeof signInFormSchema>) {
+    console.group('🔑 Sign In Process');
+    console.log('📝 Form submission:', { email: values.email });
+
     const { email, password } = values;
-    const { data, error } = await authClient.signIn.email({
-      email,
-      password,
-      callbackURL: "/dashboard",
-    }, {
-      onRequest: () => {
-        toast({
-          title: "Please wait...",
-        })
-      },
-      onSuccess: () => {
-        form.reset()
-      },
-      onError: (ctx) => {
-        alert(ctx.error.message);
-      },
-    });
-  }
+    try {
+        const { data, error } = await authClient.signIn.email({
+            email,
+            password,
+            callbackURL: "/profile",
+        }, {
+            onRequest: () => {
+                console.log('📤 Sending auth request');
+                toast({
+                    title: "Please wait...",
+                })
+            },
+            onSuccess: () => {
+                console.log('✅ Auth successful');
+                console.log('🔄 Resetting form');
+                form.reset()
+            },
+            onError: (ctx) => {
+                console.error('❌ Auth error:', {
+                    message: ctx.error.message,
+                    error: ctx.error
+                });
+                alert(ctx.error.message);
+            },
+        });
+
+        if (data) {
+            console.log('📥 Auth response:', {
+                success: true,
+                userId: data.user?.id,
+            });
+        }
+    } catch (error) {
+        console.error('❌ Unexpected error:', error);
+    }
+    console.groupEnd();
+}
 
   return (
     <Card className="w-full max-w-md mx-auto">

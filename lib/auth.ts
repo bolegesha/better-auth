@@ -1,6 +1,7 @@
+// lib/auth.ts
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { db } from "./db"; 
+import { db } from "./db";
 
 if (!process.env.AUTH_SECRET) {
   throw new Error("AUTH_SECRET environment variable is not set");
@@ -12,7 +13,12 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
-    autoSignIn: false
+    autoSignIn: true
   },
   secret: process.env.AUTH_SECRET,
+  cookie: {
+    name: 'better-auth.session_token',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  }
 });

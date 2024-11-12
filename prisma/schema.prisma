@@ -4,15 +4,22 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL") // Required for Neon serverless driver
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  WORKER
+  BASIC_USER
 }
 
 model User {
   id            String    @id @default(uuid())
   email         String    @unique
   name          String?
+  role          Role      @default(BASIC_USER)
   emailVerified Boolean   @default(false)
   image         String?
   createdAt     DateTime  @default(now())
