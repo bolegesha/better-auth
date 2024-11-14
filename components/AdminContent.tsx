@@ -11,14 +11,31 @@ import { Label } from "@/components/ui/label";
 import { Form } from '@/components/ui/form';
 import { toast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import {LogoutButton} from "@/components/LogoutButton";
+import z from 'zod';
 
-type UserType = 'admin' | 'worker' | 'user';
+type Role = 'ADMIN' | 'WORKER' | 'BASIC_USER';
+
+// const userFormSchema = z.object({
+//     email: z.string().email(),
+//     password: z.string().min(6, "Password must be at least 6 characters"),
+//     name: z.string().min(2, "Name must be at least 2 characters"),
+//     role: z.enum(['ADMIN', 'WORKER', 'BASIC_USER'])
+// });
+//
+// type UserFormData = z.infer<typeof userFormSchema>;
 
 interface User {
     id: string;
     email: string;
-    fullName: string;
-    user_type: UserType;
+    name: string;
+    role: Role;
+    emailVerified: boolean;
+    createdAt: string;
+    updatedAt: string;
+    Account: {
+        providerId: string;
+    }[];
 }
 
 const sidebarItems = [
@@ -31,7 +48,7 @@ const sidebarItems = [
 ];
 
 export default function AdminContent() {
-    const { user, loading, error, logout } = useUserData();
+    const { user, loading, error } = useUserData();
     const router = useRouter();
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [activeSection, setActiveSection] = useState('profile');
@@ -55,9 +72,12 @@ export default function AdminContent() {
                 credentials: 'include'
             });
 
-            if (!response.ok) throw new Error('Failed to fetch users');
+            if (!response.ok) {
+                throw new Error('Failed to fetch users');
+            }
 
             const data = await response.json();
+            console.log('Fetched users:', data.users); // For debugging
             setUserList(data.users);
         } catch (error) {
             console.error('Error fetching users:', error);
@@ -68,6 +88,13 @@ export default function AdminContent() {
             });
         }
     };
+
+    useEffect(() => {
+        if (activeSection === 'users') {
+            fetchUsers();
+        }
+    }, [activeSection]);
+
 
     const handleUserRegistration = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -85,30 +112,33 @@ export default function AdminContent() {
                 body: JSON.stringify({
                     email: formData.get('email'),
                     password: formData.get('password'),
-                    fullName: formData.get('name'),
-                    user_type: formData.get('user_type'),
+                    name: formData.get('name'),
+                    role: formData.get('role')
                 }),
                 credentials: 'include'
             });
 
+            const data = await response.json();
+
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to create user');
+                throw new Error(data.error || 'Failed to create user');
             }
 
             await fetchUsers();
             setIsAddingUser(false);
             form.reset();
+
             toast({
                 title: "Success",
                 description: "User created successfully",
             });
         } catch (error) {
             console.error('Error creating user:', error);
-            setFormError(error instanceof Error ? error.message : 'Failed to create user');
+            const errorMessage = error instanceof Error ? error.message : 'Failed to create user';
+            setFormError(errorMessage);
             toast({
                 title: "Error",
-                description: "Failed to create user",
+                description: errorMessage,
                 variant: "destructive",
             });
         }
@@ -213,16 +243,17 @@ export default function AdminContent() {
                                             />
                                         </div>
                                         <div>
-                                            <Label htmlFor="user_type">User Type</Label>
+                                            <Label htmlFor="user_type">Role</Label>
                                             <select
-                                                id="user_type"
-                                                name="user_type"
+                                                id="role"
+                                                name="role"
                                                 required
+                                                defaultValue="BASIC_USER"
                                                 className="mt-1 w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0071E3] focus:border-transparent"
                                             >
-                                                <option value="user">Клиент</option>
-                                                <option value="worker">Работника</option>
-                                                <option value="admin">Администратор</option>
+                                                <option value="BASIC_USER">Клиент</option>
+                                                <option value="WORKER">Работника</option>
+                                                <option value="ADMIN">Администратор</option>
                                             </select>
                                         </div>
                                         <Button
@@ -260,7 +291,7 @@ export default function AdminContent() {
                                             <tr key={user.id}>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm font-medium text-gray-900">
-                                                        {user.fullName}
+                                                        {user?.name}
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -270,10 +301,10 @@ export default function AdminContent() {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                            ${user.user_type === 'admin' ? 'bg-purple-100 text-purple-800' :
-                                                            user.user_type === 'worker' ? 'bg-green-100 text-green-800' :
+                                                            ${user.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' :
+                                                            user.role === 'WORKER' ? 'bg-green-100 text-green-800' :
                                                                 'bg-blue-100 text-blue-800'}`}>
-                                                            {user.user_type}
+                                                            {user.role}
                                                         </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -306,12 +337,8 @@ export default function AdminContent() {
                                 <label className="block text-sm font-medium text-[#86868B]">Email</label>
                                 <p className="mt-1 text-lg text-[#1D1D1F]">{user?.email}</p>
                             </div>
-                            <Button
-                                onClick={logout}
-                                className="mt-8 bg-[#D1350F] text-white hover:bg-red-400"
-                            >
-                                Выйти
-                            </Button>
+
+                            <LogoutButton />
                         </div>
                     )}
 

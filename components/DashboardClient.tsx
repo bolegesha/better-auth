@@ -79,15 +79,10 @@ export function DashboardClient({ user, isAuthenticated, logoutAction }: Dashboa
                                     <p className="mt-1 text-lg text-gray-700">{user.email}</p>
                                 </div>
 
-                                <div>
-                                {isAuthenticated ? (
-                                    <LogoutButton onLogout={logoutAction} />
-                                ) : (
-                                    <Link href='/sign-in' className={buttonVariants()}>
-                                        Sign In
-                                    </Link>
-                                )}
-                                </div>
+                                <CardContent className="space-y-4">
+                                    <div>Your worker-specific content here</div>
+                                    <LogoutButton />
+                                </CardContent>
                             </CardContent>
                         </Card>
                     )}

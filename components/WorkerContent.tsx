@@ -18,7 +18,7 @@ const sidebarItems = [
 ];
 
 export default function WorkerContent() {
-    const { user, logout } = useUserData();
+    const { user } = useUserData();
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [activeSection, setActiveSection] = useState('profile');
 
@@ -39,7 +39,7 @@ export default function WorkerContent() {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div>Your worker-specific content here</div>
-                            <LogoutButton onLogout={logout} />
+                            <LogoutButton />
                         </CardContent>
                     </Card>
                 </div>
