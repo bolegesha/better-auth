@@ -20,16 +20,16 @@ export function LogoutButton() {
             // Don't try to parse JSON if something went wrong
             if (response.ok) {
                 // Force a clean reload to the sign-in page
-                window.location.href = '/sign-in';
+                window.location.href = 'https://abt-calc.vercel.app/';
             } else {
                 console.error('Logout failed with status:', response.status);
                 // Fallback: still try to redirect
-                window.location.href = '/sign-in';
+                window.location.href = 'https://abt-calc.vercel.app/';
             }
         } catch (error) {
             console.error('Logout error:', error);
             // Fallback: still try to redirect
-            window.location.href = '/sign-in';
+            window.location.href = 'https://abt-calc.vercel.app/';
         } finally {
             setIsLoading(false);
         }
