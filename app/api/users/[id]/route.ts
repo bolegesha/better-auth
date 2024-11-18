@@ -1,14 +1,17 @@
-import { type NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { db } from "@/lib/db";
 
+type Params = Promise<{ id: string }>;
+
 export async function DELETE(
-    request: NextRequest,
-    context: { params: { id: string } }
-): Promise<NextResponse> {
+    req: Request,
+    { params }: { params: Params }
+) {
+    const { id } = await params;
+
     try {
         const deletedUser = await db.user.delete({
-            where: { id: context.params.id }
+            where: { id }
         });
 
         if (!deletedUser) {

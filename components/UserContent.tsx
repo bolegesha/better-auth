@@ -36,7 +36,7 @@ export default function UserContent() {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div>Your user-specific content here</div>
-                            <LogoutButton onLogout={logout} />
+                            <LogoutButton />
                         </CardContent>
                     </Card>
                 </div>
