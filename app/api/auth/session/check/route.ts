@@ -1,20 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
     try {
-        const sessionToken = request.cookies.get('better-auth.session_token')?.value;
+        const body = await request.json();
+        console.log('📝 Auth POST Request');
+        console.log('  Verify request body:', body);
+
+        const { sessionToken } = body;
+        console.log('  Verifying session token:', sessionToken);
 
         if (!sessionToken) {
-            return NextResponse.json({ user: null }, { status: 401 });
+            return NextResponse.json({
+                success: false,
+                error: "No session token provided"
+            });
         }
 
-        // Extract the actual session ID from the token
-        const actualSessionId = sessionToken.split('.')[0];
+        // Extract the session ID from the token
+        const sessionId = sessionToken;
+        console.log('  Extracted session ID:', sessionId);
 
         const session = await db.session.findUnique({
             where: {
-                id: actualSessionId,
+                id: sessionId,
                 expiresAt: {
                     gt: new Date(),
                 },
@@ -33,16 +42,28 @@ export async function GET(request: NextRequest) {
             },
         });
 
+        console.log('  Verify session result:', session);
+
         if (!session) {
-            return NextResponse.json({ user: null }, { status: 401 });
+            return NextResponse.json({
+                success: false,
+                error: "Invalid or expired session"
+            });
         }
 
         return NextResponse.json({
-            user: session.user,
-            success: true
+            success: true,
+            session: session,
+            user: session.user
         });
+
     } catch (error) {
-        console.error('Session check error:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        console.error("Verify session error:", error);
+        return NextResponse.json({
+            success: false,
+            error: "Internal server error"
+        }, {
+            status: 500
+        });
     }
 }
