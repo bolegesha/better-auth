@@ -11,19 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Form } from '@/components/ui/form';
 import { toast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import {LogoutButton} from "@/components/LogoutButton";
+import { LogoutButton } from "@/components/LogoutButton";
 import z from 'zod';
 
 type Role = 'ADMIN' | 'WORKER' | 'BASIC_USER';
-
-// const userFormSchema = z.object({
-//     email: z.string().email(),
-//     password: z.string().min(6, "Password must be at least 6 characters"),
-//     name: z.string().min(2, "Name must be at least 2 characters"),
-//     role: z.enum(['ADMIN', 'WORKER', 'BASIC_USER'])
-// });
-//
-// type UserFormData = z.infer<typeof userFormSchema>;
 
 interface User {
     id: string;
@@ -47,6 +38,13 @@ const sidebarItems = [
     { icon: HelpCircle, label: 'Помогите', href: '#help' }
 ];
 
+// Role priority mapping for sorting
+const rolePriority: Record<Role, number> = {
+    'ADMIN': 1,
+    'WORKER': 2,
+    'BASIC_USER': 3
+};
+
 export default function AdminContent() {
     const { user, loading, error } = useUserData();
     const router = useRouter();
@@ -55,15 +53,6 @@ export default function AdminContent() {
     const [isAddingUser, setIsAddingUser] = useState(false);
     const [userList, setUserList] = useState<User[]>([]);
     const [formError, setFormError] = useState<string | null>(null);
-
-    // Fetch users when component mounts and when activeSection changes to 'users'
-    useEffect(() => {
-        if (activeSection === 'users') {
-            fetchUsers();
-        }
-    }, [activeSection]);
-
-
 
     const fetchUsers = async () => {
         try {
@@ -77,8 +66,11 @@ export default function AdminContent() {
             }
 
             const data = await response.json();
-            console.log('Fetched users:', data.users); // For debugging
-            setUserList(data.users);
+            // Sort users by role priority
+            const sortedUsers = data.users.sort((a: User, b: User) => {
+                return rolePriority[a.role] - rolePriority[b.role];
+            });
+            setUserList(sortedUsers);
         } catch (error) {
             console.error('Error fetching users:', error);
             toast({
@@ -94,7 +86,6 @@ export default function AdminContent() {
             fetchUsers();
         }
     }, [activeSection]);
-
 
     const handleUserRegistration = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -124,7 +115,7 @@ export default function AdminContent() {
                 throw new Error(data.error || 'Failed to create user');
             }
 
-            await fetchUsers();
+            await fetchUsers(); // This will fetch and sort users
             setIsAddingUser(false);
             form.reset();
 
@@ -159,7 +150,7 @@ export default function AdminContent() {
                 throw new Error('Failed to delete user');
             }
 
-            await fetchUsers();
+            await fetchUsers(); // This will fetch and sort users
             toast({
                 title: "Success",
                 description: "User deleted successfully",
@@ -253,7 +244,6 @@ export default function AdminContent() {
                                             >
                                                 <option value="BASIC_USER">Клиент</option>
                                                 <option value="WORKER">Работника</option>
-                                                <option value="ADMIN">Администратор</option>
                                             </select>
                                         </div>
                                         <Button

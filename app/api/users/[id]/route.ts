@@ -1,14 +1,14 @@
+import { type NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { db } from "@/lib/db";
 
 export async function DELETE(
-    request: Request,
-    { params }: { params: { id: string } }
-) {
+    request: NextRequest,
+    context: { params: { id: string } }
+): Promise<NextResponse> {
     try {
-        // Using cascading delete as defined in your schema
         const deletedUser = await db.user.delete({
-            where: { id: params.id }
+            where: { id: context.params.id }
         });
 
         if (!deletedUser) {

@@ -31,17 +31,15 @@ export const Sidebar: FC<SidebarProps> = ({ items, isCollapsed, setIsCollapsed, 
     };
 
     return (
-        <TooltipProvider delayDuration={0}>
-            <div className="relative">
+        <TooltipProvider delayDuration={1}>
+            <div className="relative h-screen">
                 <div
                     className={`
-                        min-h-screen bg-[#F5F5F7] border-r border-[#E5E5EA] transition-all duration-300
+                        h-screen fixed top-0 left-0 bg-[#F5F5F7] border-r border-[#E5E5EA] transition-all duration-300
                         ${isCollapsed ? 'w-20' : 'w-[280px]'}
                     `}
                 >
-                    {/* Added pt-16 to push the nav items down */}
                     <nav className="p-4 pt-16">
-                        {/* Increased space-y-6 for more vertical spacing between items */}
                         <ul className="space-y-4">
                             {items.map((item) => (
                                 <li key={item.label}>
@@ -83,7 +81,10 @@ export const Sidebar: FC<SidebarProps> = ({ items, isCollapsed, setIsCollapsed, 
                 {/* Collapse/Expand Button */}
                 <button
                     onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="absolute top-4 -right-4 p-2 bg-white rounded-full shadow-md hover:bg-[#F5F5F7] transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-300 z-50 ml-4"
+                    className="fixed top-4 left-[252px] p-2 bg-white rounded-full shadow-md hover:bg-[#F5F5F7] transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-300 z-50 ml-4"
+                    style={{
+                        left: isCollapsed ? '52px' : '252px'
+                    }}
                     aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                 >
                     <Columns2
